@@ -1,0 +1,102 @@
+esphome:
+  name: air2d
+  friendly_name: Autotherm Air2D
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source: github://tim0816/autoterm_esphome@V1-test
+    components: [autoterm_uart]
+    refresh: 0s
+
+logger:
+  level: DEBUG
+  baud_rate: 0  # verhindert Konflikt mit UART
+
+# Enable Home Assistant API
+api:
+
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_VanPi_ssid
+  password: !secret wifi_VanPi_password
+  domain: !secret domain
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Dieselheater Hotspot"
+
+web_server:
+  port: 80
+
+captive_portal:
+  
+uart:
+  - id: uart_panel          # Verbindung zum Bedienteil
+    rx_pin: 16
+    tx_pin: 17
+    baud_rate: 9600
+    rx_buffer_size: 1024
+
+  - id: uart_heater           # Verbindung zur Heizung
+    rx_pin: 22
+    tx_pin: 23
+    baud_rate: 9600
+    rx_buffer_size: 1024
+
+
+sensor:
+  # Beispiel: Temperatur aus Home Assistant
+  - platform: homeassistant
+    entity_id: sensor.innenraum_temperature
+    id: innenraum_temperature
+    internal: true
+
+autoterm_uart:
+  uart_display_id: uart_panel
+  uart_heater_id: uart_heater
+  climate:
+    name: "Heizung"
+    default_level: 4
+    default_temperature: 20 °C
+    default_temp_sensor: 2
+  internal_temp:
+    name: "Internal Temperature"
+  external_temp:
+    name: "External Temperature"
+  heater_temp:
+    name: "Heater Temperature"
+  panel_temp:
+    name: "Panel Temperature"
+  voltage:
+    name: "Voltage"
+    accuracy_decimals: 1
+  status_text:
+    name: "Status Text"
+  fan_speed_set:
+    name: "Fan RPM Set"
+    unit_of_measurement: "rpm"
+  fan_speed_actual:
+    name: "Fan RPM Actual"
+    unit_of_measurement: "rpm"
+  pump_frequency:
+    name: "Pump Frequency"
+    unit_of_measurement: "Hz"
+  runtime_hours:
+    name: "Betriebsstunden"
+    accuracy_decimals: 2
+  session_runtime:
+    name: "Laufzeit"
+    accuracy_decimals: 2
+  fan_level:
+    name: "Fan Level"
+  panel_temp_override:
+    sensor: innenraum_temperature
+  temperature_source_select:
+    name: "Temperature Source"
