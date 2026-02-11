@@ -602,12 +602,25 @@ inline void AutotermClimate::apply_state_(climate::ClimateMode mode, const std::
   this->mode = mode;
   this->preset.reset();
   
-  if (mode != climate::CLIMATE_MODE_FAN_ONLY && mode != climate::CLIMATE_MODE_OFF && !preset_mode_.empty())
-    this->set_custom_preset(preset_mode_);
+  // Directly set the custom_preset_ member variable
+  if (mode != climate::CLIMATE_MODE_FAN_ONLY && mode != climate::CLIMATE_MODE_OFF && !preset_mode_.empty()) {
+    this->custom_preset_ = preset_mode_.c_str();
+  } else {
+    this->custom_preset_ = nullptr;
+  }
   
   this->fan_mode.reset();
+  
+  // Directly set the custom_fan_mode_ member variable
   std::string fan_label = fan_mode_label_from_level_(fan_level_);
-  if (!fan_label.empty()) this->set_custom_fan_mode(fan_label);
+  if (!fan_label.empty()) {
+    // Store in a static variable to ensure the pointer remains valid
+    static std::string stored_fan_label;
+    stored_fan_label = fan_label;
+    this->custom_fan_mode_ = stored_fan_label.c_str();
+  } else {
+    this->custom_fan_mode_ = nullptr;
+  }
   
   this->target_temperature = target_temperature_c_;
   this->current_temperature = std::isnan(current_temperature_c_) ? NAN : current_temperature_c_;
