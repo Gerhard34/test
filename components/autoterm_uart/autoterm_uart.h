@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/sensor/sensor.h"
@@ -1210,7 +1210,7 @@ void AutotermClimate::set_parent(AutotermUART *parent) {
 
   this->preset.reset();
   if (!preset_mode_.empty())
-    this->set_custom_preset_(preset_mode_.c_str(), preset_mode_.size());
+    this->set_custom_preset_(preset_mode_.c_str());
   else
     this->clear_custom_preset_();
 
@@ -1290,9 +1290,11 @@ void AutotermClimate::control(const climate::ClimateCall &call) {
   bool preset_overridden = false;
 
   if (call.has_custom_preset()) {
-    auto ref = call.get_custom_preset();  // StringRef
-    new_preset = sanitize_preset_(std::string(ref.c_str(), ref.size()));
-    preset_overridden = true;
+    const char* cp = call.get_custom_preset();   // 2025.12.x: const char*
+    if (cp != nullptr && *cp != '\0') {
+      new_preset = sanitize_preset_(cp);
+      preset_overridden = true;
+    }
   } else if (call.get_preset().has_value()) {
     new_preset = sanitize_preset_(preset_from_enum_(*call.get_preset()));
     preset_overridden = true;
@@ -1320,8 +1322,10 @@ void AutotermClimate::control(const climate::ClimateCall &call) {
 
   uint8_t new_level = fan_level_;
   if (call.has_custom_fan_mode()) {
-    auto ref = call.get_custom_fan_mode();  // StringRef
-    new_level = fan_mode_label_to_level_(std::string(ref.c_str(), ref.size()));
+    const char* cf = call.get_custom_fan_mode(); // 2025.12.x: const char*
+    if (cf != nullptr && *cf != '\0') {
+      new_level = fan_mode_label_to_level_(cf);
+    }
   } else if (call.get_fan_mode().has_value()) {
     new_level = fan_level_from_enum_(*call.get_fan_mode(), fan_level_);
   }
@@ -1554,7 +1558,7 @@ void AutotermClimate::apply_state_(climate::ClimateMode mode, const std::string 
   // Preset handling (custom)
   this->preset.reset();
   if (mode != climate::CLIMATE_MODE_FAN_ONLY && mode != climate::CLIMATE_MODE_OFF && !preset_mode_.empty())
-    this->set_custom_preset_(preset_mode_.c_str(), preset_mode_.size());
+    this->set_custom_preset_(preset_mode_.c_str());
   else
     this->clear_custom_preset_();
 
